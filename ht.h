@@ -273,9 +273,9 @@ private:
     HASH_INDEX_T mIndex_;  // index to CAPACITIES
 
     // ADD MORE DATA MEMBERS HERE, AS NECESSARY
-		double resizeAlpha_;
-        unsigned int to_be_deleted_;
-        unsigned int to_keep_cnt_;
+    double resizeAlpha_;
+    int to_be_deleted_;
+    int to_keep_cnt_;
 };
 
 // ----------------------------------------------------------------------------
@@ -302,7 +302,7 @@ HashTable<K,V,Prober,Hash,KEqual>::HashTable(
         mIndex_ = 0;
         to_be_deleted_ = 0;
         to_keep_cnt_ = 0;
-				totalProbes_ = 0;
+	    totalProbes_ = 0;
 
 		for (HASH_INDEX_T i = 0; i < CAPACITIES[mIndex_]; i++){
 			table_.push_back(nullptr);
@@ -323,7 +323,7 @@ HashTable<K,V,Prober,Hash,KEqual>::~HashTable()
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 bool HashTable<K,V,Prober,Hash,KEqual>::empty() const
 {
-		return table_.empty();
+		return (to_keep_cnt_ == 0);
 }
 
 // To be completed
@@ -338,8 +338,7 @@ template<typename K, typename V, typename Prober, typename Hash, typename KEqual
 void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
 		// go to the location of the key in table
-		
-		if ((this->to_be_deleted_ + this->to_keep_cnt_)/CAPACITIES[this->mIndex_] >= this->resizeAlpha_){
+		if ((double)(this->to_be_deleted_ + this->to_keep_cnt_)/(double)CAPACITIES[this->mIndex_] >= this->resizeAlpha_){
 			resize();
 		}
     
@@ -353,8 +352,8 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 		}
 		else{
 			table_[temp] = new HashItem(p);
-			table_.at(temp)->deleted = false; // if track not_deleted cntr vs to_be_deleted cntr
-      to_keep_cnt_ += 1;
+			table_.at(temp)->deleted = false;
+            to_keep_cnt_ += 1;
 		}
 }
 
@@ -365,8 +364,8 @@ void HashTable<K,V,Prober,Hash,KEqual>::remove(const KeyType& key)
 		HashItem* temp = internalFind(key);
 		if (temp != nullptr){ // when key position exists
 			temp->deleted = true;
-      to_be_deleted_ += 1;
-      to_keep_cnt_ -= 1;
+            to_be_deleted_ += 1;
+            to_keep_cnt_ -= 1;
 		}
 
 }
@@ -450,7 +449,7 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
 
 		// otherwise, increment to next CAPACITIES
 		// initialize temp_table_
-		prober_.m_ = CAPACITIES[++mIndex_];
+		mIndex_++;
 		std::vector<HashItem*> temp_table_(CAPACITIES[mIndex_]);
 
 		for (HASH_INDEX_T i = 0; i < CAPACITIES[mIndex_]; i++){
@@ -459,6 +458,8 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
 	
 		std::vector<HashItem*> prev_table_ = table_;
 		table_ = temp_table_;
+        to_be_deleted_ = 0;
+        to_keep_cnt_ = 0;
 
 		// numNotDeletedItems reinitialize for new table here
 		for (HASH_INDEX_T i = 0; i < CAPACITIES[mIndex_ - 1]; i++){
@@ -469,18 +470,12 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
 				}
 				else{
 					// handle rehashing, get new hash key
-					HASH_INDEX_T temp_hash_key = probe(prev_table_[i]->item.first);
-					if (temp_hash_key != npos){
-						table_[temp_hash_key] = prev_table_[i];
-					}
-					else{
-						throw std::logic_error("Npos, no new location found");
-					}
+					insert(prev_table_[i]->item);
 				}
 			}
 		}
 
-    to_be_deleted_ = 0;
+
 }
 
 // Almost complete
