@@ -314,9 +314,9 @@ HashTable<K,V,Prober,Hash,KEqual>::HashTable(
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 HashTable<K,V,Prober,Hash,KEqual>::~HashTable()
 {
-		for (unsigned int i = 0; i < table_.size(); i++){
-			delete table_[i];
-		}
+    for (unsigned int i = 0; i < table_.size(); i++){
+        delete table_[i];
+    }
 }
 
 // To be completed
@@ -465,24 +465,26 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
 		for (HASH_INDEX_T i = 0; i < CAPACITIES[mIndex_ - 1]; i++){
 			if (prev_table_[i] != nullptr){
 				// handle deletes
-				if (prev_table_[i]->deleted == true){
-					delete prev_table_[i];
-				}
-				else{
+				if (prev_table_[i]->deleted == false){
 					// handle rehashing, get new hash key
 					insert(prev_table_[i]->item);
 				}
 			}
 		}
-
-
+        
+        // deallocating temp old prev_table_
+        for (unsigned int i = 0; i < prev_table_.size(); i++){
+            if (prev_table_[i] != nullptr){
+                delete prev_table_[i];
+            }
+        }
 }
 
 // Almost complete
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 HASH_INDEX_T HashTable<K,V,Prober,Hash,KEqual>::probe(const KeyType& key) const
 {
-    HASH_INDEX_T h = hash_(key) % CAPACITIES[mIndex_]; //
+    HASH_INDEX_T h = hash_(key) % CAPACITIES[mIndex_];
     prober_.init(h, CAPACITIES[mIndex_], key);
 
     HASH_INDEX_T loc = prober_.next(); 
