@@ -31,14 +31,15 @@ struct MyStringHash {
 						temp[i] = 0;
 					}
 					else {
-						temp[i] = letterDigitToNumber(k[i - (30 - k.size())]);
+						temp[i] = letterDigitToNumber(k[i - (30 - (int) k.size())]);
 					}
 				}
 
 				// setting up w
-				int w[5];
+				unsigned long long w[5];
+
 				for (int i = 4; i >= 0; i--){
-					int w_val = 0;
+					unsigned long long w_val = 0;
 					for (int k = 5; k >= 0; k--){
 						// add last letter x 36 ^ exp
 						w_val += temp[(i * 6) + k] * pow(36, 5 - k);
